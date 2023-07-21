@@ -200,6 +200,13 @@ stdenv.mkDerivation (rec {
     # Renamed to match ghc8.8:
     # https://gitlab.haskell.org/ghc/ghc/-/commit/4b431f334018eaef2cf36de3316025c68c922915#20d64c0bdc272817149d1d5cf20a73a8b5fd637f
     ./rename-numa-api-call.patch
+
+    # We need to be able to set AR_STAGE0 and LD_STAGE0 when cross-compiling
+    (fetchpatch {
+      url = "https://gitlab.haskell.org/ghc/ghc/-/commit/8f7dd5710b80906ea7a3e15b7bb56a883a49fed8.patch";
+      hash = "sha256-C636Nq2U8YOG/av7XQmG3L1rU0bmC9/7m7Hty5pm5+s=";
+    })
+    ./configure-ar-ld-stage0.patch
   ];
 
   postPatch = "patchShebangs .";
