@@ -10,6 +10,7 @@
 
 { lib
 , stdenv
+, pkgsBuildHost
 , pkgsBuildTarget
 , pkgsHostTarget
 , targetPackages
@@ -214,6 +215,7 @@ let
      else pkgsBuildTarget.targetPackages.stdenv.cc)
   ] ++ lib.optional useLLVM buildTargetLlvmPackages.llvm;
 
+  buildCC = pkgsBuildHost.stdenv.cc;
   targetCC = builtins.head toolsForTarget;
 
   # Sometimes we have to dispatch between the bintools wrapper and the unwrapped
@@ -270,12 +272,18 @@ stdenv.mkDerivation ({
   # GHC needs the locale configured during the Haddock phase.
   LANG = "en_US.UTF-8";
 
+  # GHC is unable to build a cross-compiler without this set.
+  "NIX_CC_WRAPPER_TARGET_HOST_${buildCC.suffixSalt}" = 1;
+
   # GHC is a bit confused on its cross terminology.
   # TODO(@sternenseemann): investigate coreutils dependencies and pass absolute paths
   preConfigure = ''
     for env in $(env | grep '^TARGET_' | sed -E 's|\+?=.*||'); do
       export "''${env#TARGET_}=''${!env}"
     done
+    export CC_STAGE0="${buildCC}/bin/${buildCC.targetPrefix}cc"
+    export LD_STAGE0="${buildCC.bintools}/bin/${buildCC.bintools.targetPrefix}ld${lib.optionalString useLdGold ".gold"}"
+    export AR_STAGE0="${buildCC.bintools.bintools}/bin/${buildCC.bintools.targetPrefix}ar"
     # GHC is a bit confused on its cross terminology, as these would normally be
     # the *host* tools.
     export CC="${targetCC}/bin/${targetCC.targetPrefix}cc"
