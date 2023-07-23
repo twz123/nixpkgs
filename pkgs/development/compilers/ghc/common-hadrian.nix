@@ -165,7 +165,7 @@
     # all `sphinx` dependencies building in those environments.
     # `sphinx` pulls in among others:
     # Ruby, Python, Perl, Rust, OpenGL, Xorg, gtk, LLVM.
-    (stdenv.targetPlatform == stdenv.hostPlatform)
+    (stdenv.buildPlatform == stdenv.hostPlatform && stdenv.targetPlatform == stdenv.hostPlatform)
     && !stdenv.hostPlatform.isMusl
   )
 
