@@ -217,6 +217,7 @@ let
 
   buildCC = pkgsBuildHost.stdenv.cc;
   targetCC = builtins.head toolsForTarget;
+  installCC = pkgsHostTarget.gcc;
 
   # Sometimes we have to dispatch between the bintools wrapper and the unwrapped
   # derivation for certain tools depending on the platform.
@@ -251,6 +252,9 @@ let
   targetLibffi = if hostPlatform != targetPlatform
     then targetPackages.libffi
     else pkgsHostTarget.libffi;
+
+  # Our Cabal compiler name
+  haskellCompilerName = "ghc-${version}";
 
 in
 
@@ -488,18 +492,23 @@ stdenv.mkDerivation ({
     # leave bindist directory
     popd
 
+    # Make the installed GHC use the host platform's tools.
+    sed -i $out/lib/${targetPrefix}${haskellCompilerName}/lib/settings \
+      -e "s!$CC!${installCC}/bin/${installCC.targetPrefix}cc!g" \
+      -e "s!$CXX!${installCC}/bin/${installCC.targetPrefix}c++!g" \
+      -e "s!$LD!${installCC.bintools}/bin/${installCC.bintools.targetPrefix}ld${lib.optionalString useLdGold ".gold"}!g" \
+      -e "s!$AR!${installCC.bintools.bintools}/bin/${installCC.bintools.targetPrefix}ar!g" \
+      -e "s!$RANLIB!${installCC.bintools.bintools}/bin/${installCC.bintools.targetPrefix}ranlib!g"
+
     # Install the bash completion file.
     install -Dm 644 utils/completion/ghc.bash $out/share/bash-completion/completions/${targetPrefix}ghc
   '';
 
   passthru = {
-    inherit bootPkgs targetPrefix;
+    inherit bootPkgs targetPrefix haskellCompilerName;
 
     inherit llvmPackages;
     inherit enableShared;
-
-    # Our Cabal compiler name
-    haskellCompilerName = "ghc-${version}";
 
     # Expose hadrian used for bootstrapping, for debugging purposes
     inherit hadrian;
