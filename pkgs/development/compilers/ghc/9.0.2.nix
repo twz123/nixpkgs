@@ -293,9 +293,10 @@ stdenv.mkDerivation (rec {
       done
   '';
 
+  # We don't pass --host because ./configure gets confused when we do
   # TODO(@Ericson2314): Always pass "--target" and always prefix.
-  configurePlatforms = [ "build" "host" ]
-    ++ lib.optional (targetPlatform != hostPlatform) "target";
+  configurePlatforms = [ "build" ]
+    ++ lib.optional (buildPlatform != hostPlatform || targetPlatform != hostPlatform) "target";
 
   # `--with` flags for libraries needed for RTS linker
   configureFlags = [
