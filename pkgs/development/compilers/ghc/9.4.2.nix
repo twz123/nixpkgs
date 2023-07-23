@@ -289,7 +289,8 @@ stdenv.mkDerivation (rec {
   # `--with` flags for libraries needed for RTS linker
   configureFlags = [
     "--datadir=$doc/share/doc/ghc"
-    "--with-curses-includes=${ncurses.dev}/include" "--with-curses-libraries=${ncurses.out}/lib"
+    "--with-curses-includes=${pkgsBuildHost.ncurses.dev}/include"
+    "--with-curses-libraries=${pkgsBuildHost.ncurses.out}/lib"
   ] ++ lib.optionals (libffi != null) [
     "--with-system-libffi"
     "--with-ffi-includes=${targetLibffi.dev}/include"
